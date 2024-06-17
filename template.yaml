@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A function that sells Habitica items periodically leaving only a subset of those
+
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 128
+
+Parameters:
+  HabiticaApiKey:
+    Type: String
+    Description: The API key for the Habitica account
+    NoEcho: true
+  HabiticaUserId:
+    Type: String
+    Description: The user ID for the Habitica account
+    NoEcho: true
+
+Resources:
+  HabiticaSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Secret for the Habitica API key and user ID
+      SecretString: !Sub '{"${HabiticaUserId}": "${HabiticaApiKey}"}'
+  
+  HabiticaSellItems:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: sell_items/
+      Handler: main.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - arm64
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref HabiticaSecret
+      Events:
+        FoodSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(10 1 * * ? *)
+            Input: '{"sell_category": "food"}'
+            Enabled: true
+        EggsSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(15 1 * * ? *)
+            Input: '{"sell_category": "eggs"}'
+            Enabled: true
+        HatchingPotionsSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(20 1 * * ? *)
+            Input: '{"sell_category": "hatchingPotions"}'
+            Enabled: true
