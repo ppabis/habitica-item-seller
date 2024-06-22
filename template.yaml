@@ -37,7 +37,8 @@ Resources:
             SecretArn: !Ref HabiticaSecret
       Environment:
         Variables:
-          HABITICA_SECRET: !Ref HabiticaSecret          
+          HABITICA_SECRET: !Ref HabiticaSecret
+          ITEMS_TO_LEAVE: "100"
       Events:
         FoodSchedule:
           Type: Schedule
