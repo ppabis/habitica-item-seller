@@ -35,6 +35,9 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref HabiticaSecret
+      Environment:
+        Variables:
+          HABITICA_SECRET: !Ref HabiticaSecret          
       Events:
         FoodSchedule:
           Type: Schedule
