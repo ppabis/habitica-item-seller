@@ -1,0 +1,18 @@
+version = 0.1
+
+[default]
+[default.global]
+[default.global.parameters]
+stack_name = "habitica-item-seller"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "habitica-item-seller"
+region = "eu-west-1"
+image_repositories = []
