@@ -4,7 +4,7 @@ Description: A function that sells Habitica items periodically leaving only a su
 
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 15
     MemorySize: 128
 
 Parameters:
