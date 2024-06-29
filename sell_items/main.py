@@ -20,5 +20,5 @@ def lambda_handler(event, context):
     
     return {
         "statusCode": 200,
-        "body": "Earned {gp:.2f} gold."
+        "body": f"Earned {gp:.2f} gold."
     }
