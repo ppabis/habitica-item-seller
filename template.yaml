@@ -38,7 +38,7 @@ Resources:
       Environment:
         Variables:
           HABITICA_SECRET: !Ref HabiticaSecret
-          ITEMS_TO_LEAVE: "100"
+          ITEMS_TO_LEAVE: "40"
       Events:
         FoodSchedule:
           Type: Schedule
@@ -57,4 +57,52 @@ Resources:
           Properties:
             Schedule: cron(20 1 * * ? *)
             Input: '{"sell_category": "hatchingPotions"}'
+            Enabled: true
+  
+  # Database and table for collecting Habitica statistics
+  HabiticaStatsTimestream:
+    Type: AWS::Timestream::Database
+    Properties:
+      DatabaseName: HabiticaStats
+
+  HabiticaStatsTable:
+    Type: AWS::Timestream::Table
+    Properties:
+      TableName: HabiticaStatsTable
+      DatabaseName: !Ref HabiticaStatsTimestream
+      RetentionProperties:
+        MemoryStoreRetentionPeriodInHours: 168
+        MagneticStoreRetentionPeriodInDays: 365
+
+  HabiticaCollectStats:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: collect_stats/
+      Handler: main.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - arm64
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref HabiticaSecret
+        - Statement:
+            - Effect: Allow
+              Action:
+                - timestream:WriteRecords
+                - timestream:DescribeTable
+              Resource: !GetAtt HabiticaStatsTable.Arn
+            - Effect: Allow
+              Action:
+                - timestream:DescribeEndpoints
+              Resource: "*"
+      Environment:
+        Variables:
+          HABITICA_SECRET: !Ref HabiticaSecret
+          DATABASE_NAME: !Ref HabiticaStatsTimestream
+          TABLE_NAME: !Select [ "1", !Split [ "|", !Ref HabiticaStatsTable ] ]
+      Events:
+        Schedule30Min:
+          Type: Schedule
+          Properties:
+            Schedule: cron(*/30 * * * ? *)
             Enabled: true
