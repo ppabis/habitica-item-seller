@@ -1,7 +1,6 @@
-import requests, boto3
+import requests
 
 HABITICA_URL="https://habitica.com/api/v3"
-
 STATS_TO_GET = ['gp', 'exp', 'mp', 'lvl', 'hp']
 
 def filter_stats(stats: dict) -> dict:

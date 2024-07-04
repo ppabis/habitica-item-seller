@@ -1,4 +1,4 @@
-import boto3, time
+import boto3
 
 def store_in_timestream(database: str, table: str, timestamp: float, username: str, stats: dict):
     """
