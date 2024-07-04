@@ -106,3 +106,16 @@ Resources:
           Properties:
             Schedule: cron(*/30 * * * ? *)
             Enabled: true
+
+Outputs:
+  HabiticaStatsDatabaseName:
+    Description: The database for storing Habitica statistics
+    Value: !Ref HabiticaStatsTimestream
+    Export:
+      Name: HabiticaStatsDatabaseName
+  
+  HabiticaStatsTableName:
+    Description: The table for storing Habitica statistics
+    Value: !Select [ "1", !Split [ "|", !Ref HabiticaStatsTable ] ]
+    Export:
+      Name: HabiticaStatsTableName
