@@ -18,12 +18,12 @@ def line_to_task(line: str) -> dict | None:
     ```text
     ID    due date   difficulty+attribute - task description
     0001. 15/07/2024 TP - Wash the dishes
-    0002. none       HI - Create a new blog post
+    0002.            HI - Create a new blog post
     ```
     """
-    r = re.match('^(\\d+).\\s+([0-9/]+|none)\\s+([TEMHtemh])([SIPCsipc])\\s+-\\s+(.*)$', line)
+    r = re.match('^(\\d+).\\s+([0-9/]*)\\s*([TEMHtemh])([SIPCsipc])\\s+-\\s+(.*)$', line)
     if r:
-        date = None if r.group(2) == 'none' else dt.strptime(r.group(2), '%d/%m/%Y')
+        date = None if r.group(2) == '' else dt.strptime(r.group(2), '%d/%m/%Y')
         difficulty = DIFFICULTIES[r.group(3).upper()]
         attribute = ATTRIBUTES[r.group(4).upper()]
         return {
@@ -43,7 +43,10 @@ def parse_task_list(task_list: str) -> list[dict]:
     """
     tasks = []
     for line in task_list.split('\n'):
-        task = line_to_task(line.strip())
-        if task:
-            tasks.append(task)
+        try:
+            task = line_to_task(line.strip())
+            if task:
+                tasks.append(task)
+        except Exception as e:
+            print(f"Error processing line '{line}': {e}")
     return tasks
