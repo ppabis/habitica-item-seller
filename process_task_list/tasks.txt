@@ -1,0 +1,14 @@
+This is an unrelated lien taht should be ignored
+0001. 01/08/2024 MI - Create a list of tasks
+0002. 02/08/2024 ES - Create another list of tasks
+0003. TS - A task with no due date!
+
+This is not a task
+0004. This is also not a task
+
+0005. 03/10/2024 - Also this is also not a task
+
+0006. TC - test 12345 this should be a task - with a hyphen -- extra - hyphens
+0007. 05/08/2024 HP - 😂 emojis 🏆
+0010. 66/12/3033 EC - this task should be just warned and not crash but is wrong
+0234. HC - test 0234 this should be a task
