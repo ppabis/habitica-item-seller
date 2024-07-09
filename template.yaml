@@ -16,6 +16,10 @@ Parameters:
     Type: String
     Description: The user ID for the Habitica account
     NoEcho: true
+  HabiticaTaskListBucketName:
+    Type: String
+    Description: The name of the S3 bucket for retrieving the Habitica task list
+    Default: habitica-task-list-34s6n4781236n487
 
 Resources:
   HabiticaSecret:
@@ -106,6 +110,46 @@ Resources:
           Properties:
             Schedule: cron(*/30 * * * ? *)
             Enabled: true
+
+  # Lambda for processing updated file and DynamoDB table to store the processed tasks. S3 bucket for storing the file
+  HabiticaTaskListBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref HabiticaTaskListBucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt HabiticaProcessTaskList.Arn
+  
+  HabiticaTaskListTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: HabiticaTaskList
+
+  HabiticaProcessTaskList:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: process_task_list/
+      Handler: main.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - arm64
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref HabiticaTaskListBucketName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabiticaTaskListTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref HabiticaTaskListTable
+  
+  HabiticaProcessTaskListS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt HabiticaProcessTaskList.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${HabiticaTaskListBucketName}"
 
 Outputs:
   HabiticaStatsDatabaseName:
