@@ -16,3 +16,4 @@ resolve_s3 = true
 s3_prefix = "habitica-item-seller"
 region = "eu-west-1"
 image_repositories = []
+disable_rollback = false
