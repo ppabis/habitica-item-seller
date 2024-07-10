@@ -1,4 +1,5 @@
 import boto3, os
+from actions import batch_create_tasks
 
 TABLE_NAME = os.environ['TABLE_NAME']
 ddb = boto3.resource('dynamodb').Table(TABLE_NAME)
@@ -55,10 +56,10 @@ def store_update_tasks(tasks: list[dict]) -> list[str]:
     If it is different, update the task. Otherwise, skip it.
     If it does not exist, create a new task.
 
-    Returns the list of primary keys of items that we created or
-    updated.
+    Returns the list of primary keys of items that have to be yet updated
+    in Habitica API.
     """
-    ids = []
+    updated_ids, new_tasks = [], []
     for task in tasks:
         # Update a task if it is different
         response = ddb.get_item(Key={'id': task['id']})
@@ -66,13 +67,31 @@ def store_update_tasks(tasks: list[dict]) -> list[str]:
             updated = compare_and_update(task, response['Item'])
             if updated:
                 ddb.put_item(Item=updated)
-                ids.append(task['id'])
+                # If the uuid is set, that means that task exists in Habitica
+                if 'habitica_uuid' in updated and updated['habitica_uuid']:
+                    updated_ids.append(updated['id'])
+                else:
+                    new_tasks.append(task)
             else:
                 print(f"Task {task['id']} is up to date.")
         # Task not found so create a new one
         else:
             ddb.put_item(Item=create_task(task))
-            ids.append(task['id'])
+            new_tasks.append(task)
+
+    # Create tasks in Habitica in batch
+    ids_uuids = batch_create_tasks(new_tasks)
+
+    # Update rows in DynamoDB to hold UUIDs from Habitica of recently created tasks
+    for task_id, uuid in ids_uuids:
+        try:
+            ddb.update_item(
+                Key={'id': task_id},
+                UpdateExpression='SET habitica_uuid = :uuid',
+                ExpressionAttributeValues={':uuid': uuid}
+            )
+        except Exception as e:
+            print(f"Error adding UUID to task {task_id}: {e}")
     
-    return ids
+    return updated_ids
     
