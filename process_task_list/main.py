@@ -32,13 +32,14 @@ def lambda_handler(event, context):
                 print(f"Error processing record: {e}")
 
     # If the lists are empty, we don't have to even execute the Step Function
-    if len(ids) > 1 and STEP_FUNCTION_NAME:
-        print(f"Starting Step Function with {len(ids)} tasks.")
-        # step.start_execution(stateMachineArn=STEP_FUNCTION_NAME, input=json.dumps({"Create": new_ids, "Update": existing_ids, "Finished": False}))
+    if len(ids) > 0 and STEP_FUNCTION_NAME:
+        print(f"Starting Step Function {STEP_FUNCTION_NAME} with {len(ids)} tasks.")
+        step.start_execution(stateMachineArn=STEP_FUNCTION_NAME, input=json.dumps({"List": ids, "Finished": False}))
     
     return {
             'statusCode': 200,
             'body': {
-                'List': ids
+                'List': ids,
+                'Finished': len(ids) == 0
             }
         }
