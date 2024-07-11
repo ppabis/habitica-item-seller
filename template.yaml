@@ -139,9 +139,16 @@ Resources:
             BucketName: !Ref HabiticaTaskListBucketName
         - DynamoDBCrudPolicy:
             TableName: !Ref HabiticaTaskListTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt HabiticaUpdateTasksStateMachine.Name
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref HabiticaSecret
       Environment:
         Variables:
           TABLE_NAME: !Ref HabiticaTaskListTable
+          STEP_FUNCTION_NAME: !Ref HabiticaUpdateTasksStateMachine
+          HABITICA_SECRET: !Ref HabiticaSecret
+          TASK_TAG: 4aedf1fc-8dd7-4ff9-95f1-1f3112a0b815
   
   HabiticaProcessTaskListS3Permission:
     Type: AWS::Lambda::Permission
@@ -150,6 +157,62 @@ Resources:
       FunctionName: !GetAtt HabiticaProcessTaskList.Arn
       Principal: s3.amazonaws.com
       SourceArn: !Sub "arn:aws:s3:::${HabiticaTaskListBucketName}"
+
+  # Updating Habitica task list via Step Functions
+  HabiticaUpdateTasksStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref HabiticaUpdateTasksLambda
+      Definition:
+        StartAt: Loop Tasks
+        States:
+          # Loop for all tasks
+          Loop Tasks:
+            Type: Choice
+            Default: Succeed
+            Choices:
+              - Variable: "$.Finished"
+                BooleanEquals: false
+                Next: Update Task
+          
+          # Loop start
+          Update Task:
+            Type: Task
+            Resource: !GetAtt HabiticaUpdateTasksLambda.Arn
+            Parameters:
+              List.$: "$.List"
+              Finished: false
+            Next: Wait
+          
+          Wait:
+            Type: Wait
+            Seconds: 2
+            Next: Loop Tasks
+          # Loop end
+
+          Succeed:
+            Type: Succeed
+  
+  HabiticaUpdateTasksLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: update_tasks/
+      Handler: main.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - arm64
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref HabiticaTaskListTable
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref HabiticaSecret
+      Environment:
+        Variables:
+          HABITICA_SECRET: !Ref HabiticaSecret
+          TABLE_NAME: !Ref HabiticaTaskListTable
+
 
 Outputs:
   HabiticaStatsDatabaseName:
