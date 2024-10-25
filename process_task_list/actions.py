@@ -43,6 +43,6 @@ def create_task(task: dict, tag: str = "") -> dict:
         data['tags'] = [tag]
 
     if 'notes' in task and task['notes']:
-        data['notes'] = task['notes']
+        data['notes'] = task['notes'].replace('<br>', '\n\n')
     
     return data

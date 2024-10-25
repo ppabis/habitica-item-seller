@@ -42,6 +42,6 @@ def format_task(task: dict) -> dict:
         data['date'] = task['date']
 
     if 'notes' in task and task['notes']:
-        data['notes'] = task['notes']
+        data['notes'] = task['notes'].replace('<br>', '\n\n')
     
     return data

@@ -32,7 +32,7 @@ ID    due date   difficulty+attribute - task description [optional notes]
 0003.            MS - Study for exam
 ```
 
-### Each task line contains:
+### Each task line contains
 
 - **ID**: A numeric identifier (e.g., 0001)
 - **Due Date**: Optional date in DD/MM/YYYY format
@@ -47,4 +47,4 @@ ID    due date   difficulty+attribute - task description [optional notes]
   - P (Perception)
   - C (Constitution)
 - **Title**: Task description
-- **Notes**: Optional notes in square brackets
+- **Notes**: Optional notes in square brackets. Use `<br>` to separate lines.
