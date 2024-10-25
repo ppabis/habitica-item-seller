@@ -17,6 +17,7 @@ def compare_and_update(task: dict, item: dict) -> dict | None:
     """
     dirty = False
     task['date'] = task['date'].isoformat() if task['date'] else ""
+    task['notes'] = task['notes'] if task['notes'] else ""
     
     if task['title'] != item['title']:
         item['title'] = task['title']
@@ -33,6 +34,18 @@ def compare_and_update(task: dict, item: dict) -> dict | None:
     if task['attribute'] != item['attribute']:
         item['attribute'] = task['attribute']
         dirty = True
+
+    # It can happen that the notes are not present in the item so that's why
+    # we first check if they are present and only then compare. Otherwise, we just
+    # add the notes to the item.
+    if 'notes' in item:
+        if task['notes'] != item['notes']:
+            item['notes'] = task['notes']
+            dirty = True
+    else:
+        if task['notes']:
+            item['notes'] = task['notes']
+            dirty = True
     
     return item if dirty else None
 
@@ -47,6 +60,7 @@ def create_task(task: dict) -> dict:
         'date': task['date'].isoformat() if task['date'] else "",
         'difficulty': task['difficulty'],
         'attribute': task['attribute'],
+        'notes': task['notes'] if task['notes'] else ""
     }
 
 
@@ -67,6 +81,7 @@ def store_update_tasks(tasks: list[dict]) -> list[str]:
             updated = compare_and_update(task, response['Item'])
             if updated:
                 ddb.put_item(Item=updated)
+                print(f"Updated task {task['id']}.")
                 # If the uuid is set, that means that task exists in Habitica
                 if 'habitica_uuid' in updated and updated['habitica_uuid']:
                     updated_ids.append(updated['id'])
@@ -78,6 +93,7 @@ def store_update_tasks(tasks: list[dict]) -> list[str]:
         else:
             ddb.put_item(Item=create_task(task))
             new_tasks.append(task)
+            print(f"Created new task {task['id']}.")
 
     # Create tasks in Habitica in batch
     ids_uuids = batch_create_tasks(new_tasks)
@@ -90,6 +106,7 @@ def store_update_tasks(tasks: list[dict]) -> list[str]:
                 UpdateExpression='SET habitica_uuid = :uuid',
                 ExpressionAttributeValues={':uuid': uuid}
             )
+            print(f"Added UUID {uuid} to task {task_id}.")
         except Exception as e:
             print(f"Error adding UUID to task {task_id}: {e}")
     

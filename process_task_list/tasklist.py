@@ -12,26 +12,34 @@ def line_to_task(line: str) -> dict | None:
     """
     Processes the line to extract the task date. In case the line is not
     a valid task, returns None. If it is valid, it will return a dictionary
-    with fields `id`, `date` (can be None), `difficulty`, `attribute` and
-    `title`.
+    with fields `id`, `date` (can be None), `difficulty`, `attribute`,
+    `title` and `notes` (can be None).
 
     ```text
-    ID    due date   difficulty+attribute - task description
+    ID    due date   difficulty+attribute - task description [notes]
     0001. 15/07/2024 TP - Wash the dishes
-    0002.            HI - Create a new blog post
+    0002.            HI - Create a new blog post [notes here]
     ```
     """
-    r = re.match('^(\\d+).\\s+([0-9/]*)\\s*([TEMHtemh])([SIPCsipc])\\s+-\\s+(.*)$', line)
+    r = re.match('^(\\d+).\\s+([0-9/]*)\\s*([TEMHtemh])([SIPCsipc])\\s+-\\s+([^\\[]*)(\\[.*\\])?$', line)
     if r:
-        date = None if r.group(2) == '' else dt.strptime(r.group(2), '%d/%m/%Y')
+        # Try to parse the date first, return None if invalid
+        try:
+            date = None if r.group(2) == '' else dt.strptime(r.group(2), '%d/%m/%Y')
+        except ValueError:  # Only catch invalid date formats
+            return None
+        
         difficulty = DIFFICULTIES[r.group(3).upper()]
         attribute = ATTRIBUTES[r.group(4).upper()]
+        title = r.group(5).strip()
+        notes = r.group(6).strip()[1:-1] if r.group(6) else None
         return {
             'id': r.group(1),
             'date': date,
             'difficulty': difficulty,
             'attribute': attribute,
-            'title': r.group(5),
+            'title': title,
+            'notes': notes
         }
     return None
 

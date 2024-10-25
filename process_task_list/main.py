@@ -30,6 +30,8 @@ def lambda_handler(event, context):
                 ids.extend(_ids)
             except Exception as e:
                 print(f"Error processing record: {e}")
+                import traceback
+                print(f"Full traceback: {''.join(traceback.format_exc())}")
 
     # If the lists are empty, we don't have to even execute the Step Function
     if len(ids) > 0 and STEP_FUNCTION_NAME:

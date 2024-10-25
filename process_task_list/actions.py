@@ -22,7 +22,7 @@ def batch_create_tasks(tasks) -> list[(str, str)]:
         uuids = [ t['id'] for t in data ] if isinstance(data, list) else [data['id']]
         return list(zip(original_ids, uuids))
     
-    raise Exception(response.json()['message'])
+    raise Exception(f"Exception from Habitica API when creating tasks: {response.json()['message']}")
 
 
 def create_task(task: dict, tag: str = "") -> dict:
@@ -41,5 +41,8 @@ def create_task(task: dict, tag: str = "") -> dict:
     
     if tag:
         data['tags'] = [tag]
+
+    if 'notes' in task and task['notes']:
+        data['notes'] = task['notes']
     
     return data
