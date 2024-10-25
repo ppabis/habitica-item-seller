@@ -34,10 +34,14 @@ def format_task(task: dict) -> dict:
         "text": task['title'],
         "priority": task['difficulty'],
         "attribute": task['attribute'],
-        "date": None # Can be used for clearing the due date
+        "date": None, # Can be used for clearing the due date
+        "notes": None
     }
 
     if 'date' in task and task['date']:
         data['date'] = task['date']
+
+    if 'notes' in task and task['notes']:
+        data['notes'] = task['notes']
     
     return data
